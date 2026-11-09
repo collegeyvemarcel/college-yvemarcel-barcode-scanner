@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>College Yvemarcel Barcode Scanner</title>
+  <script src="https://unpkg.com/html5-qrcode"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f1f4f9;
+      text-align: center;
+      padding: 20px;
+      color: #222;
+    }
+    .container {
+      max-width: 450px;
+      margin: auto;
+      background: white;
+      padding: 22px;
+      border-radius: 14px;
+      box-shadow: 0 2px 10px #0002;
+    }
+    h2 { color: #174b9b; }
+    button {
+      width: 100%;
+      padding: 15px;
+      margin-top: 15px;
+      border: 0;
+      border-radius: 8px;
+      background: #174b9b;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+    }
+    #reader {
+      width: 100%;
+      margin-top: 18px;
+    }
+    #status {
+      margin-top: 15px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>College Yvemarcel</h2>
+    <p>Student Barcode Scanner</p>
+
+    <div id="reader"></div>
+
+    <button onclick="startScanner()">START SCANNER</button>
+    <button onclick="stopScanner()" style="background:#777">
+      STOP CAMERA
+    </button>
+
+    <p id="status">Ready to scan a student barcode.</p>
+  </div>
+
+  <script>
+    const staffFormUrl =
+      "https://script.google.com/macros/s/AKfycbwstz-jUITaHs9vENyIt64YenKGZ_kyXBmh4gxFPSzg4yOieiTSDb2V0XDXI1aVcVRS/exec";
+
+    let scanner = null;
+    let scanning = false;
+
+    async function startScanner() {
+      if (scanning) return;
+
+      try {
+        document.getElementById("status").textContent =
+          "Starting camera...";
+
+        scanner = new Html5Qrcode("reader");
+
+        await scanner.start(
+          { facingMode: "environment" },
+          { fps: 10, qrbox: { width: 250, height: 120 } },
+          function(decodedText) {
+            document.getElementById("status").textContent =
+              "Barcode detected. Opening transaction form...";
+
+            scanning = false;
+
+            scanner.stop().then(function() {
+              window.location.href =
+                staffFormUrl + "?barcode=" +
+                encodeURIComponent(decodedText);
+            });
+          }
+        );
+
+        scanning = true;
+        document.getElementById("status").textContent =
+          "Camera active. Point it at the student's barcode.";
+
+      } catch (error) {
+        document.getElementById("status").textContent =
+          "Camera error: " + (error.message || error);
+      }
+    }
+
+    async function stopScanner() {
+      if (scanner && scanning) {
+        await scanner.stop();
+        scanner.clear();
+        scanning = false;
+        document.getElementById("status").textContent =
+          "Camera stopped.";
+      }
+    }
+  </script>
+</body>
+</html>
